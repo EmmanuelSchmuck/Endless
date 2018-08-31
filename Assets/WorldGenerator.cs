@@ -19,23 +19,27 @@ public class WorldGenerator : MonoBehaviour
 	public float minSizeY, maxSizeY;
 	public Bounds bounds;
 	public int amount;
+	public AnimationCurve lateralDensityProfile;
+	public AnimationCurve forwardDensityProfile;
 
 	float[,] heightMap;
 
-	// Use this for initialization
-	void Start()
-	{
+	List<GameObject> objects = new List<GameObject>();
 
-		Generate();
-	}
+	public static WorldGenerator Instance;
+
+	private void Awake() => Instance = this;
+
 
 	// Update is called once per frame
-	void Generate()
+	public void Generate()
 	{
 
 		SetTerrainheight();
 
 		//SetTerrainTextures();
+
+		CleanObjects();
 
 		SetObjects();
 	}
@@ -76,26 +80,27 @@ public class WorldGenerator : MonoBehaviour
 		terrain.terrainData.SetHeights(0, 0, heightMap);
 	}
 
-	void SetTerrainTextures(){
+	void SetTerrainTextures()
+	{
 
 		int alphaMapWidth = terrain.terrainData.alphamapWidth;
-        int alphaTextureCount = 2;
+		int alphaTextureCount = 2;
 
-        float[,,] alphaMap = new float[alphaMapWidth, alphaMapWidth, alphaTextureCount];
+		float[,,] alphaMap = new float[alphaMapWidth, alphaMapWidth, alphaTextureCount];
 
-        for (int x = 0; x < alphaMapWidth; x++)
-        {
-            for (int y = 0; y < alphaMapWidth; y++)
-            {
-                float height = heightMap[x, y];
+		for (int x = 0; x < alphaMapWidth; x++)
+		{
+			for (int y = 0; y < alphaMapWidth; y++)
+			{
+				float height = heightMap[x, y];
 
-                alphaMap[x, y, 0] = height;
-                alphaMap[x, y, 1] = 1f - height;
+				alphaMap[x, y, 0] = height;
+				alphaMap[x, y, 1] = 1f - height;
 
-            }
-        }
+			}
+		}
 
-        terrain.terrainData.SetAlphamaps(0, 0, alphaMap);
+		terrain.terrainData.SetAlphamaps(0, 0, alphaMap);
 
 	}
 
@@ -104,13 +109,14 @@ public class WorldGenerator : MonoBehaviour
 
 		Vector3 position = Vector3.zero;
 		Vector3 scale = Vector3.zero;
-		GameObject cube;
+		GameObject obj;
 		Quaternion rotation;
 
 		for (int i = 0; i < amount; i++)
 		{
+			// use LERP between two extremes ? 
 
-			position.x = Random.Range(-1f, 1f) * bounds.extents.x + bounds.center.x;
+			position.x = (-1f + 2f * forwardDensityProfile.Evaluate(Random.value)) * bounds.extents.x + bounds.center.x;
 			//position.y = Random.Range(-1f, 1f) * bounds.extents.y;
 			position.z = Random.Range(-1f, 1f) * bounds.extents.z + bounds.center.z;
 			position.y = GetWorldYAtWorldXZ(position.x, position.z);
@@ -118,13 +124,14 @@ public class WorldGenerator : MonoBehaviour
 			rotation = Quaternion.identity;
 			//rotation = Quaternion.Euler(Random.Range(0,180f),Random.Range(0,180f),Random.Range(0,180f));
 
-			cube = Instantiate(cubePrefab, position, rotation);
+			obj = Instantiate(cubePrefab, position, rotation, this.transform);
+			objects.Add(obj);
 
 			scale.x = Random.Range(minSizeXZ, maxSizeXZ);
 			scale.y = Random.Range(minSizeY, maxSizeY);
 			scale.z = Random.Range(minSizeXZ, maxSizeXZ);
 
-			cube.transform.localScale = scale;
+			obj.transform.localScale = scale;
 
 			//cube.GetComponent<Renderer>().material.color;
 		}
@@ -140,5 +147,16 @@ public class WorldGenerator : MonoBehaviour
 		if (hmX >= hmRes || hmX < 0 || hmY >= hmRes || hmY < 0) return 0;
 		height = terrain.terrainData.GetHeight(hmX, hmY) + terrain.transform.position.y;
 		return height;
+	}
+
+	void CleanObjects()
+	{
+
+		for (int i = 0; i < objects.Count; i++)
+		{
+			GameObject obj = objects[0];
+			objects.RemoveAt(0);
+			Destroy(obj);
+		}
 	}
 }

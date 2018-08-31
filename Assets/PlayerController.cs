@@ -75,4 +75,13 @@ public class PlayerController : MonoBehaviour
 		float newHeight = Mathf.Lerp(transform.position.y, groundAltitude + flyingAltitude, alitudeCorrectionSpeed * Time.deltaTime);
 		transform.position = new Vector3(transform.position.x, newHeight, transform.position.z);
 	}
+	
+	private void OnTriggerEnter(Collider other) {
+
+		if(other.CompareTag("Obstacle")){
+
+			GameController.Instance.OnPlayerCollision();
+		}
+		
+	}
 }
