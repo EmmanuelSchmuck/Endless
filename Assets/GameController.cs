@@ -1,34 +1,63 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
 
-	public Transform playerSpawn;
-	public GameObject player;
+    public Transform playerSpawn;
+    public GameObject player;
+    public Color collisionColor;
 
-	public static GameController Instance;
+    private bool hasEnded;
 
-	void Awake() => Instance = this;
+    public float endZ = 5800f;
 
-	// Use this for initialization
-	void Start()
-	{
-		SpawnPlayer();
-		WorldGenerator.Instance.Generate();
-	}
+    public static GameController Instance;
 
-	public void OnPlayerCollision()
-	{
-		SpawnPlayer();
-		WorldGenerator.Instance.Generate();
-	}
+    void Awake() => Instance = this;
 
-	void SpawnPlayer()
-	{
+    // Use this for initialization
+    void Start()
+    {
+
+        WorldGenerator.Instance.Generate();
+        SpawnPlayer();
+        StartCoroutine(FadeScreen.Instance.TriggerFadeFromColor(Color.black, 4f));
+    }
+
+    void Update()
+    {
+
+        if (player.transform.position.z > endZ && !hasEnded)
+        {
+			hasEnded = true;
+            StartCoroutine(Endgame());
+        }
+
+    }
+
+    IEnumerator Endgame()
+    {
+		yield return StartCoroutine(FadeScreen.Instance.TriggerFadeToColor(Color.black, 4f));
+		SceneManager.LoadScene("Menu");
+		
+    }
+
+    public void OnPlayerCollision()
+    {
+        StartCoroutine(FadeScreen.Instance.TriggerFadeFromColor(collisionColor, 2f));
+
+        WorldGenerator.Instance.Generate();
+        SpawnPlayer();
+    }
+
+    void SpawnPlayer()
+    {
 		player.transform.position = playerSpawn.position;
-	}
+        player.GetComponent<PlayerController>().Initialize();     
+    }
 
 
 }

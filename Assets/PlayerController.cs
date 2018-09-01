@@ -5,83 +5,146 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
 
-	public float forwardSpeed;
-	public float lateralSpeed;
+    public float forwardSpeed;
+    public float lateralSpeed;
 
-	public float flyingAltitude;
-	public float alitudeCorrectionSpeed;
 
-	public float maxRollAngle = 25f;
-	public float maxPitchAngle = 25f;
+    public float flyingAltitude;
+    public float alitudeCorrectionSpeed;
 
-	public float rotateAnimationSpeed = 1f;
+    public float maxRollAngle = 25f;
+    public float maxPitchAngle = 25f;
 
-	public Transform groundCheckOrigin;
+    public float rotateAnimationSpeed = 1f;
 
-	public Transform model;
+    public Transform groundCheckOrigin;
 
-	public LayerMask groundMask;
+    public Transform model;
 
-	private float horizontalInput;
+    public LayerMask groundMask;
 
-	// Use this for initialization
-	void Start()
-	{
-		
+    public Camera camera;
 
-	}
+    public float baseFov = 60f;
 
-	// Update is called once per frame
-	void Update()
-	{
-		Vector3 movement = Vector3.zero;
+    private float horizontalInput;
+	private bool colliding;
 
-		movement += Vector3.forward * forwardSpeed;
+    private float GetBonusSpeed()
+    {
+        float bonusSpeed = 0f;
+        foreach (Bonus bonus in currentActiveBonus)
+        {
+            bonusSpeed += bonus.currentBonusSpeed;
+        }
 
-		horizontalInput = Input.GetAxis("Horizontal");
+        return bonusSpeed;
+    }
+    private float GetBonusFov()
+    {
+        float bonusFov = 0f;
+        foreach (Bonus bonus in currentActiveBonus)
+        {
+            bonusFov += bonus.currentBonusFov;
+        }
 
-		movement += lateralSpeed * Vector3.right * horizontalInput;
+        return bonusFov;
+    }
 
-		transform.position += movement * Time.deltaTime;
+    public List<Bonus> currentActiveBonus = new List<Bonus>();
 
-	}
+    // Use this for initialization
+    public void Initialize()
+    {
+        camera.fieldOfView = baseFov;
+		colliding = false;
+		currentActiveBonus.Clear();
+    }
 
-	private void LateUpdate()
-	{
+    // Update is called once per frame
+    void Update()
+    {
+        Vector3 movement = Vector3.zero;
 
-		RaycastHit hit;
-		Physics.Raycast(groundCheckOrigin.position + Vector3.up * 500f, Vector3.down, out hit, 1000f, groundMask);
-		float groundAltitude = hit.point.y;
-		float groundNormal = 90f - Vector3.Angle(hit.normal, Vector3.forward);
-		Debug.Log(groundNormal);
+        movement += Vector3.forward * (forwardSpeed + GetBonusSpeed());
 
-		TurnAnimation(groundNormal);
-		AdjustHeight(groundAltitude);
-	}
+        horizontalInput = Input.GetAxis("Horizontal");
 
-	private void TurnAnimation(float groundNormal)
-	{
+        movement += (lateralSpeed + GetBonusSpeed()) * Vector3.right * horizontalInput;
 
-		float rotZ = -1f * horizontalInput * maxRollAngle;
-		float rotY = 0;
-		float rotX = 1f * groundNormal * maxPitchAngle / 45f;
+        transform.position += movement * Time.deltaTime;
 
-		model.transform.rotation = Quaternion.Slerp(model.transform.rotation, Quaternion.Euler(rotX, rotY, rotZ), rotateAnimationSpeed * Time.deltaTime);
-		
-	}
+        camera.fieldOfView = baseFov + GetBonusFov();
 
-	void AdjustHeight(float groundAltitude)
-	{
-		float newHeight = Mathf.Lerp(transform.position.y, groundAltitude + flyingAltitude, alitudeCorrectionSpeed * Time.deltaTime);
-		transform.position = new Vector3(transform.position.x, newHeight, transform.position.z);
-	}
-	
-	private void OnTriggerEnter(Collider other) {
+    }
 
-		if(other.CompareTag("Obstacle")){
+    private void LateUpdate()
+    {
 
-			GameController.Instance.OnPlayerCollision();
-		}
-		
-	}
+        RaycastHit hit;
+        Physics.Raycast(groundCheckOrigin.position + Vector3.up * 500f, Vector3.down, out hit, 1000f, groundMask);
+        float groundAltitude = hit.point.y;
+        float groundNormal = 90f - Vector3.Angle(hit.normal, Vector3.forward);
+
+        TurnAnimation(groundNormal);
+        AdjustHeight(groundAltitude);
+    }
+
+    private void TurnAnimation(float groundNormal)
+    {
+
+        float rotZ = -1f * horizontalInput * maxRollAngle;
+        float rotY = 0;
+        float rotX = 1f * groundNormal * maxPitchAngle / 45f;
+
+        model.transform.rotation = Quaternion.Slerp(model.transform.rotation, Quaternion.Euler(rotX, rotY, rotZ), rotateAnimationSpeed * Time.deltaTime);
+
+    }
+
+    void AdjustHeight(float groundAltitude)
+    {
+        float newHeight = Mathf.Lerp(transform.position.y, groundAltitude + flyingAltitude, alitudeCorrectionSpeed * Time.deltaTime);
+        transform.position = new Vector3(transform.position.x, newHeight, transform.position.z);
+    }
+
+    IEnumerator OnBonusPicked(Bonus bonus)
+    {
+        float timer = 0f;
+        float alpha = 0f;
+        bonus.GetComponentInChildren<Renderer>().enabled = false;
+        currentActiveBonus.Add(bonus);
+		StartCoroutine(FadeScreen.Instance.TriggerFadeInOutToColor(bonus.flashColor, bonus.flashDuration));
+        while (timer < bonus.bonusDuration)
+        {
+            timer += Time.deltaTime;
+            alpha = timer / bonus.bonusDuration;
+            bonus.currentBonusSpeed = bonus.bonusSpeed * bonus.bonusSpeedCurve.Evaluate(alpha);
+            bonus.currentBonusFov = bonus.bonusFov * bonus.bonusSpeedCurve.Evaluate(alpha);
+            yield return null;
+        }
+        bonus.currentBonusSpeed = 0f;
+        bonus.currentBonusFov = 0f;
+        currentActiveBonus.Remove(bonus);
+    }
+
+
+
+    private void OnTriggerEnter(Collider other)
+    {
+
+        if (other.CompareTag("Obstacle") && !colliding)
+        {
+			colliding = true;
+            GameController.Instance.OnPlayerCollision();	
+        }
+
+        if (other.CompareTag("Bonus"))
+        {
+            Bonus bonus = other.GetComponent<Bonus>();
+            if (bonus.picked) return;
+            else bonus.picked = true;
+            StartCoroutine(OnBonusPicked(bonus));
+        }
+
+    }
 }
