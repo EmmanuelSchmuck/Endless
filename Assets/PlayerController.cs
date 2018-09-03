@@ -21,11 +21,15 @@ public class PlayerController : MonoBehaviour
 
     public Transform model;
 
+	public Renderer[] renderers;
+
     public LayerMask groundMask;
 
     public Camera camera;
 
     public float baseFov = 60f;
+
+	public bool isColorA;
 
     private float horizontalInput;
 	private bool colliding;
@@ -60,6 +64,14 @@ public class PlayerController : MonoBehaviour
 		colliding = false;
 		currentActiveBonus.Clear();
     }
+
+	public void SwitchColor(Color color){
+
+		foreach(Renderer rend in renderers){
+
+			rend.material.color = color;
+		}
+	}
 
     // Update is called once per frame
     void Update()
@@ -107,19 +119,23 @@ public class PlayerController : MonoBehaviour
         transform.position = new Vector3(transform.position.x, newHeight, transform.position.z);
     }
 
-    IEnumerator OnBonusPicked(Bonus bonus)
+    IEnumerator OnBonusPicked(Bonus bonus, bool correct)
     {
         float timer = 0f;
         float alpha = 0f;
+		float bonusSpeed = correct ? bonus.bonusSpeed : -bonus.bonusSpeed;
+		float bonusFov = correct ? bonus.bonusFov : -bonus.bonusFov;
         bonus.GetComponentInChildren<Renderer>().enabled = false;
         currentActiveBonus.Add(bonus);
-		StartCoroutine(FadeScreen.Instance.TriggerFadeInOutToColor(bonus.flashColor, bonus.flashDuration));
+		StartCoroutine(FadeScreen.Instance.TriggerFadeInOutToColor(
+			correct ? bonus.flashColorCorrect : bonus.flashColorError, correct ? bonus.flashDurationCorrect : bonus.flashDurationError));
+
         while (timer < bonus.bonusDuration)
         {
             timer += Time.deltaTime;
             alpha = timer / bonus.bonusDuration;
-            bonus.currentBonusSpeed = bonus.bonusSpeed * bonus.bonusSpeedCurve.Evaluate(alpha);
-            bonus.currentBonusFov = bonus.bonusFov * bonus.bonusSpeedCurve.Evaluate(alpha);
+            bonus.currentBonusSpeed = bonusSpeed * bonus.bonusSpeedCurve.Evaluate(alpha);
+            bonus.currentBonusFov = bonusFov * bonus.bonusSpeedCurve.Evaluate(alpha);
             yield return null;
         }
         bonus.currentBonusSpeed = 0f;
@@ -143,7 +159,11 @@ public class PlayerController : MonoBehaviour
             Bonus bonus = other.GetComponent<Bonus>();
             if (bonus.picked) return;
             else bonus.picked = true;
-            StartCoroutine(OnBonusPicked(bonus));
+			bool isValid = isColorA == bonus.isColorA;
+			StartCoroutine(OnBonusPicked(bonus, isValid));
+			
+			GameController.Instance.OnBonusPicked(isValid);	
+            
         }
 
     }

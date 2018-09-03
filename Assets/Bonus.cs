@@ -14,12 +14,13 @@ public class Bonus : MonoBehaviour {
 	public  float currentBonusFov;
 
 
-	public Color flashColor;
-	public float flashDuration;
+	public Color flashColorCorrect, flashColorError;
+	public float flashDurationCorrect, flashDurationError;
 
 	public bool picked = false;
 
 	public Renderer rend;
+	public bool isColorA;
 
 	public Texture[] symbols;
 

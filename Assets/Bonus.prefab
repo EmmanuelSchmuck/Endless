@@ -244,9 +244,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f95e06353df59a74c9186b2210fd71f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bonusSpeed: 8
-  bonusDuration: 8
-  bonusFov: 8
+  bonusSpeed: 9
+  bonusDuration: 9
+  bonusFov: 9
   bonusSpeedCurve:
     serializedVersion: 2
     m_Curve:
@@ -282,10 +282,13 @@ MonoBehaviour:
     m_RotationOrder: 4
   currentBonusSpeed: 0
   currentBonusFov: 0
-  flashColor: {r: 0, g: 1, b: 0.60258484, a: 1}
-  flashDuration: 0.33
+  flashColorCorrect: {r: 0, g: 1, b: 0.101481676, a: 1}
+  flashColorError: {r: 1, g: 0, b: 0, a: 1}
+  flashDurationCorrect: 0.25
+  flashDurationError: 0.44
   picked: 0
   rend: {fileID: 23787310670298202}
+  isColorA: 0
   symbols:
   - {fileID: 2800000, guid: 24525aecd9e13ca43a25d2950c355391, type: 3}
   - {fileID: 2800000, guid: c0ec06eed25f98e47a0a1cddd7697014, type: 3}
@@ -306,5 +309,5 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.33
+  m_Radius: 1.2
   m_Center: {x: 0, y: 0, z: 0}
