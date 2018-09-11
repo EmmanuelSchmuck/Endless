@@ -244,9 +244,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f95e06353df59a74c9186b2210fd71f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bonusSpeed: 9
-  bonusDuration: 9
-  bonusFov: 9
+  bonusSpeed: 8
+  bonusDuration: 8
+  bonusFov: 8
   bonusSpeedCurve:
     serializedVersion: 2
     m_Curve:

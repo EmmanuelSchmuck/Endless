@@ -17,7 +17,7 @@ RenderSettings:
   m_Fog: 1
   m_FogColor: {r: 0.8867924, g: 0.32208967, b: 0.42838666, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.0002
+  m_FogDensity: 0.0005
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
@@ -2376,7 +2376,7 @@ MonoBehaviour:
   edgeExp: 1
   sampleDist: 1
   edgesOnly: 0
-  edgesOnlyBgColor: {r: 1, g: 1, b: 1, a: 1}
+  edgesOnlyBgColor: {r: 0.3551086, g: 0.5204798, b: 0.7169812, a: 1}
   edgeDetectShader: {fileID: 4800000, guid: 0d1644bdf064147baa97f235fc5b4903, type: 3}
 --- !u!114 &1685302998
 MonoBehaviour:
@@ -2392,8 +2392,8 @@ MonoBehaviour:
   distanceFog: 1
   excludeFarPixels: 1
   useRadialDistance: 0
-  heightFog: 1
-  height: 181.83
+  heightFog: 0
+  height: 0
   heightDensity: 0.1
   startDistance: 0
   fogShader: {fileID: 4800000, guid: 70d8568987ac0499f952b54c7c13e265, type: 3}
